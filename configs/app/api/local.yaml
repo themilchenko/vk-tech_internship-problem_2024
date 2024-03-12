@@ -1,0 +1,24 @@
+server:
+  address: "127.0.0.1:8080"
+  timeout: 4s
+  idle_timeout: 30s
+
+database:
+  user: "postgres"
+  dbname: "cyber_garden"
+  host: "localhost"
+  port: 5432
+  sslmode: "disable"
+
+translate_mode: false
+
+env_file: ".env"
+logger_level: "debug"
+
+cookie_settings:
+  secure: "true"
+  http_only: "true"
+  expire_date:
+    years: 0
+    months: 0
+    days: 7
