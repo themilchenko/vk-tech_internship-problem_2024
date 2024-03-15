@@ -1,0 +1,365 @@
+swagger: "2.0"
+info:
+  description: This is a simple API for Film Library
+  title: Film Library
+  version: "1.0.0"
+  contact:
+    email: ivan.milchenko.92@mail.ru
+
+tags:
+  - name: admins
+    description: Only Admins can work with it
+  - name: users
+    description: Operations available to regular users. Admins can get access to these requests too
+  - name: auth
+    description: Operations to get access and role to service
+
+paths:
+  /auth:
+    get:
+      description: Check authentication of user by cookie
+      tags:
+        - auth
+      summary: User authentication request
+      operationId: auth
+      responses:
+        "200":
+          description: Session was successfully found
+          schema:
+            $ref: "#/definitions/UserID"
+        "401":
+          description: User is an unauthorized
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "404":
+          description: User not found
+          schema:
+            $ref: "#/definitions/HTTPError"
+  /signup:
+    post:
+      description: Create a new user to get access to service
+      summary: Creates new user
+      tags:
+        - auth
+      operationId: signup
+      parameters:
+        - description: username, password and role
+          name: authData
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/UserID"
+      responses:
+        "200":
+          description: User was successfully created
+          schema:
+            $ref: "#/definitions/UserID"
+        "400":
+          description: Bad request
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "409":
+          description: Username is already exists
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "500":
+          description: Internal error
+          schema:
+            $ref: "#/definitions/HTTPError"
+  /login:
+    post:
+      description: Authorization of User
+      tags:
+        - auth
+      summary: User login request
+      operationId: login
+      parameters:
+        - description: username, password and role
+          name: authData
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/AuthUser"
+      responses:
+        "200":
+          description: Session was successfully found
+          schema:
+            $ref: "#/definitions/UserID"
+        "400":
+          description: Wrong login or password or bad data was received
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "404":
+          description: User was not found
+          schema:
+            $ref: "#/definitions/HTTPError"
+  /logout:
+    delete:
+      security:
+        - ApiKeyAuth: []
+      description: Get request for user logout
+      tags:
+        - auth
+      summary: User logout
+      operationId: logout
+      responses:
+        204:
+          description: Successfully logout
+          schema:
+            $ref: "#/definitions/EmptyStruct"
+        400:
+          description: Bad session / request
+          schema:
+            $ref: "#/definitions/HTTPError"
+        401:
+          description: No session provided
+          schema:
+            $ref: "#/definitions/HTTPError"
+  /actors:
+    post:
+      security:
+        - ApiKeyAuth: []
+      description: Add information about an actor
+      tags:
+        - admins
+      summary: Create actor
+      operationId: createActor
+      parameters:
+        - description: username, password and role
+          name: authData
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/AuthUser"
+      responses:
+        "200":
+          description: Actor was successfully created
+          schema: "#/definitions/ActorID"
+        "400":
+          description: Bad request
+          schema: "#/definitions/HTTPError"
+        "401":
+          description: No session provided
+          schema: "#/definitions/HTTPError"
+        "403":
+          description: Bad access
+          schema: "#/definitions/HTTPError"
+        "500":
+          description: Internal error
+          schema:
+            $ref: "#/definitions/HTTPError"
+  /actors/{id}:
+    put:
+      security:
+        - ApiKeyAuth: []
+      description: Update information about actor by id
+      tags:
+        - admins
+      summary: Update actor
+      operationId: updateActor
+      parameters:
+        - type: integer
+          description: Actor ID
+          name: id
+          in: path
+          required: true
+        - type: string
+          description: Actor Name
+          name: name
+          in: body
+          required: true
+        - type: boolean
+          description: Actor Gender
+          name: gender
+          in: body
+          required: true
+        - type: string
+          format: date
+          description: Actor BirthDate
+          name: date
+          in: body
+          required: true
+      responses:
+        "200":
+          description: Actor was successfully created
+          schema: "#/definitions/ActorID"
+        "400":
+          description: Bad request
+          schema: "#/definitions/HTTPError"
+        "401":
+          description: No session provided
+          schema: "#/definitions/HTTPError"
+        "403":
+          description: Bad access
+          schema: "#/definitions/HTTPError"
+        "404":
+          description: Actor not found
+          schema: "#/definitions/HTTPError"
+        "500":
+          description: Internal error
+          schema:
+            $ref: "#/definitions/HTTPError"
+    delete:
+      security:
+        - ApiKeyAuth: []
+      description: Delete information about actor
+      tags:
+        - admins
+      summary: Delete Actor
+      operationId: deleteActor
+      parameters:
+        - type: integer
+          description: Actor ID
+          name: id
+          in: path
+          required: true
+      responses:
+        "204":
+          description: Actor was successfully deleted
+          schema:
+            $ref: "#/definitions/EmptyStruct"
+        "400":
+          description: Bad request
+          schema: "#/definitions/HTTPError"
+        "401":
+          description: No session provided
+          schema: "#/definitions/HTTPError"
+        "403":
+          description: Bad access
+          schema: "#/definitions/HTTPError"
+        "404":
+          description: Actor not found
+          schema: "#/definitions/HTTPError"
+        "500":
+          description: Internal error
+          schema:
+            $ref: "#/definitions/HTTPError"
+    get:
+      security:
+        - ApiKeyAuth: []
+      description: Get Actor by id
+      tags:
+        - admins
+        - users
+      summary: Get Actor
+      operationId: getActor
+      parameters:
+        - type: integer
+          description: ActorID
+          name: id
+          in: path
+          required: true
+      responses:
+        "200":
+          description: Actor was successfully found
+          schema:
+            $ref: "#/definitions/Actor"
+        "400":
+          description: Bad request
+          schema: "#/definitions/HTTPError"
+        "401":
+          description: No session provided
+          schema: "#/definitions/HTTPError"
+        "404":
+          description: Actor not found
+          schema: "#/definitions/HTTPError"
+        "500":
+          description: Internal error
+          schema:
+            $ref: "#/definitions/HTTPError"
+
+definitions:
+  HTTPError:
+    type: object
+    properties:
+      message:
+        type: string
+  Actor:
+    type: object
+    properties:
+      name:
+        type: string
+        example: Brad Pitt
+      gender:
+        type: boolean
+        example: true
+      birthDate:
+        type: string
+        format: date
+        example: 1963-12-18
+    required:
+      - name
+      - gender
+      - birthDate
+  Movie:
+    type: object
+    properties:
+      title:
+        type: string
+        example: Babylon
+      description:
+        type: string
+        example: A tale of outsized ambition and outrageous excess, tracing the rise and fall of multiple characters in an era of unbridled decadence and depravity during Hollywood’s transition from silent films and to sound films in the late 1920s.
+      releaseDate:
+        type: string
+        format: date
+        example: 2022-12-15
+      rating:
+        type: integer
+        minimum: 0
+        maximum: 10
+        example: 8
+      castList:
+        type: array
+        items:
+          $ref: "#/definitions/Actor"
+    required:
+      - title
+      - description
+      - releaseDate
+      - rating
+      - castList
+  AuthUser:
+    type: object
+    properties:
+      username:
+        type: string
+        example: Jack
+      password:
+        type: string
+        format: password
+        example: "*****"
+      role:
+        type: string
+        example: user
+    required:
+      - username
+      - password
+      - role
+  UserID:
+    type: object
+    properties:
+      ID:
+        type: integer
+        example: 123
+  ActorID:
+    type: object
+    properties:
+      ID:
+        type: integer
+        example: 13
+  MovieID:
+    type: object
+    properties:
+      ID:
+        type: integer
+        example: 12
+  EmptyStruct:
+    type: object
+
+securityDefinitions:
+  ApiKeyAuth:
+    description: Authorization via Cookie
+    type: apiKey
+    name: Authorization
+    in: header
