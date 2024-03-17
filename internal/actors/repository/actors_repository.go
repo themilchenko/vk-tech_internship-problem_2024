@@ -1,6 +1,7 @@
 package actorsRepository
 
 import (
+	gormModels "github.com/themilchenko/vk-tech_internship-problem_2024/internal/models/gorm"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -14,6 +15,10 @@ func NewPostgres(url string) (*Postgres, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	db.AutoMigrate(
+		gormModels.Actor{},
+	)
 
 	return &Postgres{
 		DB: db,

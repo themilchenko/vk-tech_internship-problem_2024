@@ -15,12 +15,10 @@ import (
 )
 
 func main() {
-	// Parsing flags
 	var configPath string
 	config.ParseFlag(&configPath)
 	flag.Parse()
 
-	// Creating config instance
 	cfg := config.NewConfig()
 	if err := cfg.Open(configPath); err != nil {
 		log.Printf("failed to open config file with path: %s", configPath)
@@ -33,6 +31,7 @@ func main() {
 		ReadTimeout:  cfg.Server.Timeout,
 		WriteTimeout: cfg.Server.IdleTimeout,
 	}, cfg)
+
 	go func() {
 		if err := s.Start(); err != nil {
 			log.Fatal("failed to start server")

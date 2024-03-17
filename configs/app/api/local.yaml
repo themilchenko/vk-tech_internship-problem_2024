@@ -5,12 +5,10 @@ server:
 
 database:
   user: "postgres"
-  dbname: "cyber_garden"
+  dbname: "movies_library"
   host: "localhost"
   port: 5432
   sslmode: "disable"
-
-translate_mode: false
 
 env_file: ".env"
 logger_level: "debug"

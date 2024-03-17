@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"time"
 
@@ -22,7 +23,7 @@ type Config struct {
 	Server struct {
 		Address     string        `yaml:"address"`
 		Timeout     time.Duration `yaml:"timeout"`
-		IdleTimeout time.Duration `yaml:"timeout"`
+		IdleTimeout time.Duration `yaml:"idle_timeout"`
 	} `yaml:"server"`
 	Database struct {
 		User    string `yaml:"user"`
@@ -33,15 +34,17 @@ type Config struct {
 	} `yaml:"database"`
 	EnvFile        string `yaml:"env_file"`
 	LoggerLvl      string `yaml:"logger_level"`
-	CookieSettings struct {
-		Secure     bool `yaml:"secure"`
-		HttpOnly   bool `yaml:"http_only"`
-		ExpireDate struct {
-			Years  uint64 `yaml:"years"`
-			Months uint64 `yaml:"months"`
-			Days   uint64 `yaml:"days"`
-		} `yaml:"expire_date"`
-	}
+	CookieSettings CookieSettings
+}
+
+type CookieSettings struct {
+	Secure     bool `yaml:"secure"`
+	HttpOnly   bool `yaml:"http_only"`
+	ExpireDate struct {
+		Years  uint64 `yaml:"years"`
+		Months uint64 `yaml:"months"`
+		Days   uint64 `yaml:"days"`
+	} `yaml:"expire_date"`
 }
 
 func NewConfig() *Config {
@@ -49,7 +52,7 @@ func NewConfig() *Config {
 		Server: struct {
 			Address     string        `yaml:"address"`
 			Timeout     time.Duration `yaml:"timeout"`
-			IdleTimeout time.Duration `yaml:"timeout"`
+			IdleTimeout time.Duration `yaml:"idle_timeout"`
 		}(struct {
 			Address     string
 			Timeout     time.Duration
@@ -126,6 +129,17 @@ func (c *Config) Open(path string) error {
 	return nil
 }
 
+func (c *Config) FormatDbAddr() string {
+	return fmt.Sprintf(
+		"host=%s user=%s password=admin dbname=%s port=%d sslmode=%s",
+		c.Database.Host,
+		c.Database.User,
+		c.Database.DbName,
+		c.Database.Port,
+		c.Database.SslMode,
+	)
+}
+
 func ParseFlag(path *string) {
-	flag.StringVar(path, "ConfigPath", "configs/app/local.yaml", "Path to Config")
+	flag.StringVar(path, "ConfigPath", "configs/app/api/local.yaml", "Path to Config")
 }
