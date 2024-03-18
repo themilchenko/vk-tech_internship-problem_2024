@@ -1,2 +1,17 @@
-# vk-tech_internship-problem_2024
-Profile task for the internship programme in VK Tech. 
+# Профильное задание для прохождения на стажировку в VK Tech
+
+---
+
+Чтобы запустить сервер, нужно прописать:
+
+```bash
+go run cmd/main.go
+```
+
+При помощи docker-compose:
+
+```bash
+docker compose up -d
+```
+
+Также можно запустить с помощью конфига, используя флаг `-ConfigPath`, значение которого будет путь к файлу. Сами файлы конфигурации можно посмотреть в `configs/`.
