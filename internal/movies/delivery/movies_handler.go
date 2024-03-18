@@ -113,7 +113,7 @@ func (h ActorsHandler) GetMovies(w http.ResponseWriter, r *http.Request) {
 	if len(filter) == 0 {
 		filter = "rating"
 	} else {
-		if filter != "title" || filter != "rating" || filter != "releaseDate" {
+		if filter != "title" && filter != "rating" && filter != "releaseDate" {
 			pkg.HandleError(w, domain.ErrBadRequest.Error(), http.StatusBadRequest)
 			return
 		}

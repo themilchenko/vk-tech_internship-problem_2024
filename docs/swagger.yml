@@ -35,6 +35,10 @@ paths:
           description: User not found
           schema:
             $ref: "#/definitions/HTTPError"
+        "500":
+          description: Internal error
+          schema:
+            $ref: "#/definitions/HTTPError"
   /signup:
     post:
       description: Create a new user to get access to service

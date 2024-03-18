@@ -37,7 +37,7 @@ func (db Postgres) CreateMovie(movie gormModels.Movie) (uint64, error) {
 
 func (db Postgres) UpdateMovie(movie gormModels.Movie) (gormModels.Movie, error) {
 	var recievedMovie gormModels.Movie
-	if err := db.DB.Model(&gormModels.Actor{ID: movie.ID}).
+	if err := db.DB.Model(&gormModels.Movie{ID: movie.ID}).
 		Updates(movie).
 		Scan(&recievedMovie).
 		Error; err != nil {
@@ -129,7 +129,6 @@ func (db Postgres) GetMovies(
 		query = query.Order(sortBy + " DESC")
 	}
 
-	// Выполняем запрос
 	if err := query.Find(&movies).Error; err != nil {
 		return nil, err
 	}

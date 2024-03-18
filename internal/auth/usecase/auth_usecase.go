@@ -13,12 +13,16 @@ import (
 	"gorm.io/gorm"
 )
 
-type hashCreator func(password string) (string, error)
+type (
+	hashCreator   func(password string) (string, error)
+	cookieCreator func(userID uint64, c config.CookieSettings) gormModels.Session
+)
 
 type AuthUsecase struct {
 	authRepository domain.AuthRepository
 
 	cookieSettings config.CookieSettings
+	cookieCreator  cookieCreator
 	hashCreator    hashCreator
 }
 
@@ -26,18 +30,28 @@ func NewAuthUsecase(a domain.AuthRepository, c config.CookieSettings, h hashCrea
 	return AuthUsecase{
 		authRepository: a,
 		cookieSettings: c,
+		cookieCreator:  generateCookie,
 		hashCreator:    h,
 	}
 }
 
-func (u AuthUsecase) generateCookie(userID uint64) gormModels.Session {
+func NewCustomAuthUsecase(a domain.AuthRepository, c config.CookieSettings, h hashCreator, cc cookieCreator) AuthUsecase {
+	return AuthUsecase{
+		authRepository: a,
+		cookieSettings: c,
+		cookieCreator:  cc,
+		hashCreator:    h,
+	}
+}
+
+func generateCookie(userID uint64, c config.CookieSettings) gormModels.Session {
 	return gormModels.Session{
 		UserID:    userID,
 		SessionID: uuid.New().String(),
 		ExpireDate: time.Now().AddDate(
-			int(u.cookieSettings.ExpireDate.Years),
-			int(u.cookieSettings.ExpireDate.Months),
-			int(u.cookieSettings.ExpireDate.Days),
+			int(c.ExpireDate.Years),
+			int(c.ExpireDate.Months),
+			int(c.ExpireDate.Days),
 		),
 	}
 }
@@ -61,7 +75,10 @@ func (u AuthUsecase) SignUp(user httpModels.AuthUser) (string, uint64, error) {
 		}
 	}
 
-	sessionID, err := u.authRepository.CreateSession(u.generateCookie(userID))
+	sessionID, err := u.authRepository.CreateSession(u.cookieCreator(userID, u.cookieSettings))
+	if err != nil {
+		return "", 0, err
+	}
 
 	return sessionID, userID, nil
 }
@@ -83,7 +100,7 @@ func (u AuthUsecase) Login(user httpModels.AuthUser) (string, uint64, error) {
 		return "", 0, domain.ErrPasswordsNotEqual
 	}
 
-	sessionID, err := u.authRepository.CreateSession(u.generateCookie(recUser.ID))
+	sessionID, err := u.authRepository.CreateSession(u.cookieCreator(recUser.ID, u.cookieSettings))
 	if err != nil {
 		return "", 0, domain.ErrInternal
 	}
@@ -97,6 +114,9 @@ func (u AuthUsecase) Logout(sessionID string) error {
 func (u AuthUsecase) Auth(sessionID string) (uint64, error) {
 	user, err := u.authRepository.GetUserBySessionID(sessionID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, domain.ErrNotFound
+		}
 		return 0, err
 	}
 	return user.ID, nil

@@ -49,14 +49,17 @@ func (u MoviesUsecase) UpdateMovie(
 		return httpModels.MovieResponse{}, err
 	}
 
-	u.moviesRepository.UpdateMovie(gormModels.Movie{
+	updatedMovie, err := u.moviesRepository.UpdateMovie(gormModels.Movie{
 		ID:          movieID,
 		Title:       movie.Title,
 		Description: movie.Description,
 		ReleaseDate: t,
 		Rating:      movie.Rating,
 	})
-	return httpModels.MovieResponse{}, nil
+	if err != nil {
+		return httpModels.MovieResponse{}, err
+	}
+	return updatedMovie.ToHTTPResponse(), nil
 }
 
 func (u MoviesUsecase) GetMovieByID(movieID uint64) (httpModels.MovieResponse, error) {
@@ -69,9 +72,9 @@ func (u MoviesUsecase) GetMovieByID(movieID uint64) (httpModels.MovieResponse, e
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return httpModels.MovieResponse{}, err
 	}
-	httpCastList := make([]httpModels.Actor, len(castList))
+	httpCastList := make([]httpModels.ActorResponse, len(castList))
 	for i, a := range castList {
-		httpCastList[i] = a.ToHTTPModelActor()
+		httpCastList[i] = a.ToHTTPModel()
 	}
 
 	httpMovie := movie.ToHTTPResponse()
@@ -109,9 +112,9 @@ func (u MoviesUsecase) GetMovies(
 			return []httpModels.MovieResponse{}, err
 		}
 
-		httpActors := make([]httpModels.Actor, len(actors))
+		httpActors := make([]httpModels.ActorResponse, len(actors))
 		for j, actor := range actors {
-			httpActors[j] = actor.ToHTTPModelActor()
+			httpActors[j] = actor.ToHTTPModel()
 		}
 
 		httpMovies[i].CastList = httpActors

@@ -35,6 +35,7 @@ func (h ActorsHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 	actorID, err := h.actorsUsecase.CreateActor(receivedActor)
 	if err != nil {
 		pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	responseData, err := json.Marshal(httpModels.ID{ID: actorID})
@@ -52,6 +53,7 @@ func (h ActorsHandler) DeleteActor(w http.ResponseWriter, r *http.Request) {
 	actorID, err := strconv.ParseUint(r.PathValue("id"), 10, 64)
 	if err != nil {
 		pkg.HandleError(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	if err := h.actorsUsecase.DeleteActorByID(actorID); err != nil {
@@ -60,6 +62,7 @@ func (h ActorsHandler) DeleteActor(w http.ResponseWriter, r *http.Request) {
 		} else {
 			pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
 		}
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -71,6 +74,7 @@ func (h ActorsHandler) GetActor(w http.ResponseWriter, r *http.Request) {
 	actorID, err := strconv.ParseUint(r.PathValue("id"), 10, 64)
 	if err != nil {
 		pkg.HandleError(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	actor, err := h.actorsUsecase.GetActorByID(actorID)
@@ -80,6 +84,7 @@ func (h ActorsHandler) GetActor(w http.ResponseWriter, r *http.Request) {
 		} else {
 			pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
 		}
+		return
 	}
 
 	responseData, err := json.Marshal(actor)
@@ -113,6 +118,7 @@ func (h ActorsHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 		} else {
 			pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
 		}
+		return
 	}
 
 	responseData, err := json.Marshal(updatedActor)

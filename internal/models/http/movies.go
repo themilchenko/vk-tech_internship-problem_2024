@@ -34,12 +34,12 @@ type MovieWithIDCast struct {
 }
 
 type MovieResponse struct {
-	ID          uint64  `json:"id,omitempty"`
-	Title       string  `json:"title,omitempty"`
-	Description string  `json:"description,omitempty"`
-	ReleaseDate string  `json:"releaseDate,omitempty"`
-	Rating      float32 `json:"rating,omitempty"`
-	CastList    []Actor `json:"castList,omitempty"`
+	ID          uint64          `json:"id,omitempty"`
+	Title       string          `json:"title,omitempty"`
+	Description string          `json:"description,omitempty"`
+	ReleaseDate string          `json:"releaseDate,omitempty"`
+	Rating      float32         `json:"rating,omitempty"`
+	CastList    []ActorResponse `json:"castList,omitempty"`
 }
 
 type MovieID struct {

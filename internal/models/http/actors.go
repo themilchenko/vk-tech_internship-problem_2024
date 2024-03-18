@@ -14,7 +14,7 @@ type Actor struct {
 type ActorResponse struct {
 	ID        uint64 `json:"id,omitempty"`
 	Name      string `json:"name,omitempty"`
-	Gender    bool   `json:"gender,omitempty"`
+	Gender    bool   `json:"gender"`
 	BirthDate string `json:"birthDate,omitempty"`
 }
 

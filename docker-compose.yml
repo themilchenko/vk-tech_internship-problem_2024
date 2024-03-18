@@ -1,0 +1,41 @@
+version: "3.3"
+services:
+  backend:
+    hostname: app
+    container_name: movies-api
+    image: milchenko/movies-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - server
+
+  postgres:
+    hostname: postgres
+    container_name: postgresql
+    image: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d movies_library"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: movies_library
+      POSTGRES_PASSWORD: admin
+      DATABASE_HOST: postgres
+    volumes:
+      - data:/var/lib/postgresql/data
+    networks:
+      - server
+
+volumes:
+  data:
+
+networks:
+  server:
+    driver: bridge
+    name: "server"

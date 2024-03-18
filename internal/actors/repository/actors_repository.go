@@ -44,7 +44,7 @@ func (db Postgres) UpdateActor(actor gormModels.Actor) (gormModels.Actor, error)
 		Error; err != nil {
 		return gormModels.Actor{}, err
 	}
-	return gormModels.Actor{}, nil
+	return recievedActor, nil
 }
 
 func (db Postgres) DeleteActorByID(actorID uint64) error {

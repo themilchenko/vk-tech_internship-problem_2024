@@ -59,7 +59,7 @@ func (s *Server) init() {
 
 func (s *Server) makeRouter() {
 	s.Router = http.NewServeMux()
-	http.Handle("/", logger.Logger(s.Router))
+	http.Handle("/", logger.Middleware(s.Router))
 
 	// authorization
 	s.Router.HandleFunc("GET /auth", s.authHandler.Auth)

@@ -34,7 +34,11 @@ func (h AuthHandler) Auth(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := h.authUsecase.Auth(cookie.Value)
 	if err != nil {
-		pkg.HandleError(w, err.Error(), http.StatusUnauthorized)
+		if errors.Is(err, domain.ErrNotFound) {
+			pkg.HandleError(w, err.Error(), http.StatusNotFound)
+		} else {
+			pkg.HandleError(w, err.Error(), http.StatusUnauthorized)
+		}
 		return
 	}
 
@@ -59,7 +63,11 @@ func (h AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	session, userID, err := h.authUsecase.Login(authUser)
 	if err != nil {
-		pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, domain.ErrNotFound) {
+			pkg.HandleError(w, err.Error(), http.StatusNotFound)
+		} else {
+			pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 
