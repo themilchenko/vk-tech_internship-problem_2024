@@ -1,6 +1,7 @@
 package authUsecase
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -53,7 +54,11 @@ func (u AuthUsecase) SignUp(user httpModels.AuthUser) (string, uint64, error) {
 		Role:     user.Role,
 	})
 	if err != nil {
-		return "", 0, err
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return "", 0, domain.ErrUserAlreadyExist
+		} else {
+			return "", 0, err
+		}
 	}
 
 	sessionID, err := u.authRepository.CreateSession(u.generateCookie(userID))
@@ -95,4 +100,12 @@ func (u AuthUsecase) Auth(sessionID string) (uint64, error) {
 		return 0, err
 	}
 	return user.ID, nil
+}
+
+func (u AuthUsecase) GetUserBySessionID(sessionID string) (httpModels.AuthUser, error) {
+	recievedUser, err := u.authRepository.GetUserBySessionID(sessionID)
+	if err != nil {
+		return httpModels.AuthUser{}, err
+	}
+	return recievedUser.ToHTTPModel(), nil
 }

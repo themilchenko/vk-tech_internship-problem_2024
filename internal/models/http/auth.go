@@ -5,3 +5,9 @@ var DeleteExpire = map[string]int{
 	"month": -1,
 	"day":   0,
 }
+
+type AuthUser struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}

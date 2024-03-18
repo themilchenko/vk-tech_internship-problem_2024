@@ -10,6 +10,7 @@ type AuthUsecase interface {
 	Login(user httpModels.AuthUser) (string, uint64, error)
 	Logout(sessionID string) error
 	Auth(sessionID string) (uint64, error)
+	GetUserBySessionID(sessionID string) (httpModels.AuthUser, error)
 }
 
 type AuthRepository interface {

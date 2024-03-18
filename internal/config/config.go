@@ -9,14 +9,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var pageSize = 10
+
 const (
-	address       = "localhost"
-	timeout       = 4
-	idelTimeout   = 30
-	port          = 8080
-	loggerLevel   = "debug"
-	translateMode = false
-	envFile       = ".env"
+	address     = "localhost"
+	timeout     = 4
+	idleTimeout = 30
+	port        = 8080
+	loggerLevel = "debug"
+	envFile     = ".env"
 )
 
 type Config struct {
@@ -35,6 +36,7 @@ type Config struct {
 	EnvFile        string `yaml:"env_file"`
 	LoggerLvl      string `yaml:"logger_level"`
 	CookieSettings CookieSettings
+	PageSize       uint64 `yaml:"page_size"`
 }
 
 type CookieSettings struct {
@@ -60,7 +62,7 @@ func NewConfig() *Config {
 		}{
 			Address:     address,
 			Timeout:     time.Duration(timeout),
-			IdleTimeout: time.Duration(idelTimeout),
+			IdleTimeout: time.Duration(idleTimeout),
 		}),
 		Database: struct {
 			User    string `yaml:"user"`

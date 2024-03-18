@@ -2,6 +2,7 @@ package httpAuth
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -37,7 +38,7 @@ func (h AuthHandler) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responseData, err := json.Marshal(httpModels.UserId{Id: userID})
+	responseData, err := json.Marshal(httpModels.ID{ID: userID})
 	if err != nil {
 		pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -65,7 +66,7 @@ func (h AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	cookie := h.makeHTTPCookie(session)
 	http.SetCookie(w, cookie)
 
-	responseData, err := json.Marshal(httpModels.UserId{Id: userID})
+	responseData, err := json.Marshal(httpModels.ID{ID: userID})
 	if err != nil {
 		pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -97,7 +98,7 @@ func (h AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(httpModels.EmptyModel{})
+	w.Write(httpModels.EmptyModel)
 }
 
 func (h AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
@@ -109,14 +110,18 @@ func (h AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 
 	sessionID, userID, err := h.authUsecase.SignUp(receivedUser)
 	if err != nil {
-		pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, domain.ErrUserAlreadyExist) {
+			pkg.HandleError(w, err.Error(), http.StatusConflict)
+		} else {
+			pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 
 	cookie := h.makeHTTPCookie(sessionID)
 	http.SetCookie(w, cookie)
 
-	responseData, err := json.Marshal(httpModels.UserId{Id: userID})
+	responseData, err := json.Marshal(httpModels.ID{ID: userID})
 	if err != nil {
 		pkg.HandleError(w, err.Error(), http.StatusInternalServerError)
 		return

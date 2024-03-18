@@ -34,3 +34,25 @@ func (m Middleware) LoginRequired(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	}
 }
+
+func (m Middleware) AccessRestriction(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie(httpAuth.CookieName)
+		if err != nil {
+			pkg.HandleError(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		user, err := m.authUsecase.GetUserBySessionID(cookie.Value)
+		if err != nil {
+			pkg.HandleError(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		if user.Role != "admin" {
+			pkg.HandleError(w, domain.ErrForbidden.Error(), http.StatusForbidden)
+			return
+		}
+
+		next(w, r)
+	}
+}

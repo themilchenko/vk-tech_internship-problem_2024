@@ -3,11 +3,11 @@ package domain
 import "errors"
 
 var (
-	ErrConflict                = errors.New("conflict")
-	ErrBadRequest              = errors.New("bad request")
-	ErrUserOrEmailAlreadyExist = errors.New("username of email is already exist")
-	ErrInvalidLoginOrPassword  = errors.New("invalid login or password")
-	ErrForbidden               = errors.New("you are not supposed to be here")
+	ErrConflict               = errors.New("conflict")
+	ErrBadRequest             = errors.New("bad request")
+	ErrUserAlreadyExist       = errors.New("username is already exist")
+	ErrInvalidLoginOrPassword = errors.New("invalid login or password")
+	ErrForbidden              = errors.New("you are not supposed to be here")
 
 	ErrCreate = errors.New("failed to create item")
 	ErrUpdate = errors.New("failed to update item")
