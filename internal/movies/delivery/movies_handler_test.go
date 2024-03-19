@@ -183,16 +183,18 @@ func TestHandler_GetMovies(t *testing.T) {
 			name:         "Successful movies get",
 			inputPageNum: 1,
 			mockBehavior: func(m *mockDomain.MockMoviesUsecase, title, actor string, filter httpModels.SortBy, isOrder bool) {
-				m.EXPECT().GetMovies(title, actor, filter, isOrder).Return([]httpModels.MovieResponse{
-					{
-						ID:          1,
-						Title:       "The Godfather",
-						Description: "description",
-						ReleaseDate: "1972-03-24",
-						Rating:      9.2,
-						CastList:    []httpModels.ActorResponse{},
-					},
-				}, nil)
+				m.EXPECT().
+					GetMovies(title, actor, filter, isOrder).
+					Return([]httpModels.MovieResponse{
+						{
+							ID:          1,
+							Title:       "The Godfather",
+							Description: "description",
+							ReleaseDate: "1972-03-24",
+							Rating:      9.2,
+							CastList:    []httpModels.ActorResponse{},
+						},
+					}, nil)
 			},
 			expectedStatusCode:   http.StatusOK,
 			expectedResponseBody: `[{"id":1,"title":"The Godfather","description":"description","releaseDate":"1972-03-24","rating":9.2}]`,
@@ -360,7 +362,10 @@ func TestHandler_DeleteActorFromMovie(t *testing.T) {
 			tt.mockBehavior(mockMoviesUsecase, tt.inputMovieID, tt.inputActorID)
 
 			mux := http.NewServeMux()
-			mux.HandleFunc("DELETE /movies/{movieID}/actors/{actorID}", handler.DeleteActorFromMoive)
+			mux.HandleFunc(
+				"DELETE /movies/{movieID}/actors/{actorID}",
+				handler.DeleteActorFromMoive,
+			)
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("DELETE", "/movies/1/actors/1", nil)

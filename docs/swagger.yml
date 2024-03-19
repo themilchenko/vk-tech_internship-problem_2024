@@ -523,6 +523,95 @@ paths:
           description: Internal error
           schema:
             $ref: "#/definitions/HTTPError"
+  /movies/{movieID}/actors/{actorID}:
+    post:
+      security:
+        - ApiKeyAuth: []
+      description: Add actor to movies cast
+      tags:
+        - movies
+      summary: Add actor to movie
+      operationId: addActorToMovie
+      parameters:
+        - type: integer
+          description: Movie ID
+          name: movieID
+          in: path
+          required: true
+        - type: integer
+          description: Actor ID
+          name: actorID
+          in: path
+          required: true
+      responses:
+        "200":
+          description: Actor was successfully added
+          schema:
+            $ref: "#/definitions/EmptyStruct"
+        "400":
+          description: Bad request
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "401":
+          description: No session provided
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "403":
+          description: Bad access
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "404":
+          description: Actor not found
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "500":
+          description: Internal error
+          schema:
+            $ref: "#/definitions/HTTPError"
+    delete:
+      security:
+        - ApiKeyAuth: []
+      description: Delete actor to movies cast
+      tags:
+        - movies
+      summary: Delete actor to movie
+      operationId: deleteActorToMovie
+      parameters:
+        - type: integer
+          description: Movie ID
+          name: movieID
+          in: path
+          required: true
+        - type: integer
+          description: Actor ID
+          name: actorID
+          in: path
+          required: true
+      responses:
+        "200":
+          description: Actor was successfully deleted
+          schema:
+            $ref: "#/definitions/EmptyStruct"
+        "400":
+          description: Bad request
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "401":
+          description: No session provided
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "403":
+          description: Bad access
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "404":
+          description: Actor not found
+          schema:
+            $ref: "#/definitions/HTTPError"
+        "500":
+          description: Internal error
+          schema:
+            $ref: "#/definitions/HTTPError"
 definitions:
   HTTPError:
     type: object

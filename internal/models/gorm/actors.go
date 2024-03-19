@@ -37,3 +37,8 @@ type ActorMovieRelation struct {
 	MovieID uint64 `gorm:"uniqueIndex:idx_movie_actor"`
 	ActorID uint64 `gorm:"uniqueIndex:idx_movie_actor"`
 }
+
+func (a *Actor) AfterDelete(tx *gorm.DB) (err error) {
+	tx.Where("actor_id = ?", a.ID).Unscoped().Delete(&ActorMovieRelation{})
+	return
+}
