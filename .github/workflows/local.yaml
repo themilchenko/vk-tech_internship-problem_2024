@@ -11,7 +11,7 @@ jobs:
           go-version: 1.21.3
       - uses: actions/checkout@v4
       - name: Build the project
-        run: make local_buil
+        run: make local_build
 
   docker-push-api:
     name: Build and push api
