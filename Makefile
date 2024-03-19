@@ -1,5 +1,5 @@
 ACTIVE_PACKAGES = $(go list ./... | grep -Ev "mocks" | tr '\n' ',')
-MAIN_PATH = ./cmd/api/main.go
+MAIN_PATH = ./cmd/main.go
 MOCKS_DESTINATION = internal/mocks
 
 .PHONY: local_build
