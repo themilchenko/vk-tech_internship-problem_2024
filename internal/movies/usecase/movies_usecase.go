@@ -43,6 +43,12 @@ func (u MoviesUsecase) CreateMovie(movie httpModels.MovieWithIDCast) (uint64, er
 			return 0, domain.ErrCreate
 		}
 	} else {
+		for _, actorID := range movie.CastIDList {
+			if _, err := u.actorsRepository.GetActorByID(actorID); err != nil {
+				return 0, domain.ErrNotFound
+			}
+		}
+
 		movieID, err = u.moviesRepository.CreateMovieWithCastList(gormMovie, movie.CastIDList)
 		if err != nil {
 			return 0, domain.ErrCreate

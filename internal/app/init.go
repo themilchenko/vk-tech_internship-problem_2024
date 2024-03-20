@@ -49,12 +49,14 @@ func (s *Server) Start() error {
 	return s.Server.ListenAndServe()
 }
 
-func (s *Server) init() {
+func (s *Server) init() error {
 	s.Server.ErrorLog = log.New(os.Stdout, "SERVERLOG: ", log.Ldate|log.Ltime|log.Lshortfile)
 	s.makeUsecases()
 	s.makeHandlers()
 	s.makeMiddlewares()
 	s.makeRouter()
+
+	return nil
 }
 
 func (s *Server) makeRouter() {
@@ -139,22 +141,22 @@ func (s *Server) makeHandlers() {
 	s.moviesHandler = httpMovies.NewActorsUsecase(s.moviesUsecase)
 }
 
-func (s *Server) makeUsecases() {
+func (s *Server) makeUsecases() error {
 	pgParams := s.Config.FormatDbAddr()
 
 	authDB, err := authRepository.NewPostgres(pgParams)
 	if err != nil {
-		s.Server.ErrorLog.Println(err)
+		return err
 	}
 
 	actorsDB, err := actorsRepository.NewPostgres(pgParams, s.Config.PageSize)
 	if err != nil {
-		s.Server.ErrorLog.Println(err)
+		return err
 	}
 
 	moviesDB, err := moviesRepository.NewPostgres(pgParams)
 	if err != nil {
-		s.Server.ErrorLog.Println(err)
+		return err
 	}
 
 	s.authUsecase = authUsecase.NewAuthUsecase(
@@ -164,6 +166,8 @@ func (s *Server) makeUsecases() {
 	)
 	s.actorsUsecase = actorsUsecase.NewActorsUsecase(actorsDB, moviesDB)
 	s.moviesUsecase = moviesUsecase.NewMoviesUsecase(moviesDB, actorsDB)
+
+	return nil
 }
 
 func (s *Server) makeMiddlewares() {

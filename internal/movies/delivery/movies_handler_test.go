@@ -3,10 +3,12 @@ package httpMovies
 import (
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/themilchenko/vk-tech_internship-problem_2024/internal/domain"
 	mockDomain "github.com/themilchenko/vk-tech_internship-problem_2024/internal/mocks/domain"
 	httpModels "github.com/themilchenko/vk-tech_internship-problem_2024/internal/models/http"
 	"go.uber.org/mock/gomock"
@@ -39,6 +41,23 @@ func TestHandler_CreateMovie(t *testing.T) {
 			},
 			expectedStatusCode:   http.StatusOK,
 			expectedResponseBody: `{"id":1}`,
+		},
+		{
+			name:      "Failed movie creation",
+			inputBody: `{"title":"The Godfather","description":"description","releaseDate":"1972-03-24","rating":9.2}`,
+			inputMovie: httpModels.MovieWithIDCast{
+				Title:       "The Godfather",
+				Description: "description",
+				ReleaseDate: "1972-03-24",
+				Rating:      9.2,
+			},
+			mockBehavior: func(m *mockDomain.MockMoviesUsecase, movie httpModels.MovieWithIDCast) {
+				m.EXPECT().
+					CreateMovie(movie).
+					Return(uint64(0), domain.ErrInternal)
+			},
+			expectedStatusCode:   http.StatusInternalServerError,
+			expectedResponseBody: `{"error":"server error"}`,
 		},
 		{
 			name:                 "Bad request",
@@ -79,17 +98,42 @@ func TestHandler_DeleteMovie(t *testing.T) {
 
 	tests := []struct {
 		name                 string
-		inputID              uint64
+		inputID              string
 		mockBehavior         mockBehavior
 		expectedStatusCode   int
 		expectedResponseBody string
 	}{
 		{
 			name:                 "Successful movie deletion",
-			inputID:              1,
+			inputID:              "1",
 			mockBehavior:         func(m *mockDomain.MockMoviesUsecase, id uint64) { m.EXPECT().DeleteMovieByID(id).Return(nil) },
 			expectedStatusCode:   http.StatusOK,
 			expectedResponseBody: "{}",
+		},
+		{
+			name:                 "Bad request",
+			inputID:              "abs",
+			mockBehavior:         func(m *mockDomain.MockMoviesUsecase, id uint64) {},
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedResponseBody: `{"error":"strconv.ParseUint: parsing \"abs\": invalid syntax"}`,
+		},
+		{
+			name:    "Err delete",
+			inputID: "2",
+			mockBehavior: func(m *mockDomain.MockMoviesUsecase, id uint64) {
+				m.EXPECT().DeleteMovieByID(id).Return(domain.ErrNotFound)
+			},
+			expectedStatusCode:   http.StatusNotFound,
+			expectedResponseBody: `{"error":"failed to find item"}`,
+		},
+		{
+			name:    "Internal error",
+			inputID: "2",
+			mockBehavior: func(m *mockDomain.MockMoviesUsecase, id uint64) {
+				m.EXPECT().DeleteMovieByID(id).Return(domain.ErrInternal)
+			},
+			expectedStatusCode:   http.StatusInternalServerError,
+			expectedResponseBody: `{"error":"server error"}`,
 		},
 	}
 
@@ -101,13 +145,14 @@ func TestHandler_DeleteMovie(t *testing.T) {
 			mockMoviesUsecase := mockDomain.NewMockMoviesUsecase(cntx)
 			handler := NewActorsUsecase(mockMoviesUsecase)
 
-			tt.mockBehavior(mockMoviesUsecase, tt.inputID)
+			id, _ := strconv.ParseUint(tt.inputID, 10, 64)
+			tt.mockBehavior(mockMoviesUsecase, id)
 
 			mux := http.NewServeMux()
 			mux.HandleFunc("DELETE /movies/{id}", handler.DeleteMovie)
 
 			w := httptest.NewRecorder()
-			req := httptest.NewRequest("DELETE", "/movies/1", nil)
+			req := httptest.NewRequest("DELETE", "/movies/"+tt.inputID, nil)
 
 			mux.ServeHTTP(w, req)
 
