@@ -1,8 +1,9 @@
 package moviesUsecase
 
 import (
-	"errors"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/themilchenko/vk-tech_internship-problem_2024/internal/domain"
 	gormModels "github.com/themilchenko/vk-tech_internship-problem_2024/internal/models/gorm"
@@ -28,15 +29,26 @@ func (u MoviesUsecase) CreateMovie(movie httpModels.MovieWithIDCast) (uint64, er
 		return 0, err
 	}
 
-	movieID, err := u.moviesRepository.CreateMovie(gormModels.Movie{
+	gormMovie := gormModels.Movie{
 		Title:       movie.Title,
 		Description: movie.Description,
 		ReleaseDate: t,
 		Rating:      movie.Rating,
-	})
-	if err != nil {
-		return 0, err
 	}
+	var movieID uint64
+
+	if len(movie.CastIDList) == 0 {
+		movieID, err = u.moviesRepository.CreateMovieWithoutCastList(gormMovie)
+		if err != nil {
+			return 0, domain.ErrCreate
+		}
+	} else {
+		movieID, err = u.moviesRepository.CreateMovieWithCastList(gormMovie, movie.CastIDList)
+		if err != nil {
+			return 0, domain.ErrCreate
+		}
+	}
+
 	return movieID, nil
 }
 
