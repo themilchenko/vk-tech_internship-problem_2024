@@ -1,9 +1,7 @@
 package app
 
 import (
-	"log"
 	"net/http"
-	"os"
 
 	httpActors "github.com/themilchenko/vk-tech_internship-problem_2024/internal/actors/delivery"
 	actorsRepository "github.com/themilchenko/vk-tech_internship-problem_2024/internal/actors/repository"
@@ -50,7 +48,6 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) init() error {
-	s.Server.ErrorLog = log.New(os.Stdout, "SERVERLOG: ", log.Ldate|log.Ltime|log.Lshortfile)
 	s.makeUsecases()
 	s.makeHandlers()
 	s.makeMiddlewares()
@@ -64,31 +61,34 @@ func (s *Server) makeRouter() {
 	http.Handle("/", logger.Middleware(s.Router))
 
 	// authorization
-	s.Router.HandleFunc("GET /auth", s.authHandler.Auth)
-	s.Router.HandleFunc("POST /signup", s.authHandler.Signup)
-	s.Router.HandleFunc("POST /login", s.authHandler.Login)
-	s.Router.HandleFunc("DELETE /logout", s.authMiddleware.LoginRequired(s.authHandler.Logout))
+	s.Router.HandleFunc("GET /api/auth", s.authHandler.Auth)
+	s.Router.HandleFunc("POST /api/signup", s.authHandler.Signup)
+	s.Router.HandleFunc("POST /api/login", s.authHandler.Login)
+	s.Router.HandleFunc("DELETE /api/logout", s.authMiddleware.LoginRequired(s.authHandler.Logout))
 
 	// actors
 	s.Router.HandleFunc(
-		"POST /actors",
+		"POST /api/actors",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.actorsHandler.CreateActor),
 		),
 	)
-	s.Router.HandleFunc("GET /actors", s.authMiddleware.LoginRequired(s.actorsHandler.GetActors))
 	s.Router.HandleFunc(
-		"PUT /actors/{id}",
+		"GET /api/actors",
+		s.authMiddleware.LoginRequired(s.actorsHandler.GetActors),
+	)
+	s.Router.HandleFunc(
+		"PUT /api/actors/{id}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.actorsHandler.UpdateActor),
 		),
 	)
 	s.Router.HandleFunc(
-		"GET /actors/{id}",
+		"GET /api/actors/{id}",
 		s.authMiddleware.LoginRequired(s.actorsHandler.GetActor),
 	)
 	s.Router.HandleFunc(
-		"DELETE /actors/{id}",
+		"DELETE /api/actors/{id}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.actorsHandler.DeleteActor),
 		),
@@ -96,39 +96,39 @@ func (s *Server) makeRouter() {
 
 	// movies
 	s.Router.HandleFunc(
-		"POST /movies",
+		"POST /api/movies",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.moviesHandler.CreateMovie),
 		),
 	)
 	s.Router.HandleFunc(
-		"GET /movies",
+		"GET /api/movies",
 		s.authMiddleware.LoginRequired(s.moviesHandler.GetMovies),
 	)
 	s.Router.HandleFunc(
-		"PUT /movies/{id}",
+		"PUT /api/movies/{id}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.moviesHandler.UpdateMovie),
 		),
 	)
 	s.Router.HandleFunc(
-		"DELETE /movies/{id}",
+		"DELETE /api/movies/{id}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.moviesHandler.DeleteMovie),
 		),
 	)
 	s.Router.HandleFunc(
-		"GET /movies/{id}",
+		"GET /api/movies/{id}",
 		s.authMiddleware.LoginRequired(s.moviesHandler.GetMovie),
 	)
 	s.Router.HandleFunc(
-		"POST /movies/{movieID}/actors/{actorID}",
+		"POST /api/movies/{movieID}/actors/{actorID}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.moviesHandler.AddActorToMovie),
 		),
 	)
 	s.Router.HandleFunc(
-		"DELETE /movies/{movieID}/actors/{actorID}",
+		"DELETE /api/movies/{movieID}/actors/{actorID}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.moviesHandler.DeleteActorFromMoive),
 		),
