@@ -45,41 +45,19 @@ func Middleware(next http.Handler) http.Handler {
 
 			duration := time.Since(start)
 
-			bytesIn := r.Header.Get("Content-Length")
-
-			if crw.status >= 400 {
-				log.Printf(
-					"\n{\n\tMethod: %s,\n\tRequestURI: %s,\n\tStatus: %d,\n\tTime: %s,\n\tremote_ip: %s,\n\thost: %s,\n\turi: %s,\n\tmethod: %s,\n\treferer: %s,\n\tuser_agent: %s,\n\tbytes_in: %s,\n\tbytes_out: %d,\n}\n",
-					method,
-					uri,
-					crw.status,
-					duration,
-					remoteIP,
-					host,
-					uri,
-					method,
-					r.Referer(),
-					r.UserAgent(),
-					bytesIn,
-					crw.size,
-				)
-			} else {
-				log.Printf(
-					"\n{\n\tMethod: %s,\n\tRequestURI: %s,\n\tStatus: %d,\n\tTime: %s,\n\tremote_ip: %s,\n\thost: %s,\n\turi: %s,\n\tmethod: %s,\n\treferer: %s,\n\tuser_agent: %s,\n\tbytes_in: %s,\n\tbytes_out: %d,\n}\n",
-					method,
-					uri,
-					crw.status,
-					duration,
-					remoteIP,
-					host,
-					uri,
-					method,
-					r.Referer(),
-					r.UserAgent(),
-					bytesIn,
-					crw.size,
-				)
-			}
+			log.Printf(
+				"\n{\n\tMethod: %s,\n\tRequestURI: %s,\n\tStatus: %d,\n\tTime: %s,\n\tremote_ip: %s,\n\thost: %s,\n\turi: %s,\n\tmethod: %s,\n\tuser_agent: %s,\n\tbytes_out: %d,\n}\n",
+				method,
+				uri,
+				crw.status,
+				duration,
+				remoteIP,
+				host,
+				uri,
+				method,
+				r.UserAgent(),
+				crw.size,
+			)
 		}()
 
 		next.ServeHTTP(crw, r)

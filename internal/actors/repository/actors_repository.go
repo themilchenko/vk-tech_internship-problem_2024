@@ -83,8 +83,7 @@ func (db Postgres) GetActors(pageNum uint64) ([]gormModels.Actor, error) {
 	offset := db.pageSize * (pageNum - 1)
 	var recievedActors []gormModels.Actor
 
-	if err := db.DB.
-		Offset(int(offset)).
+	if err := db.DB.Offset(int(offset)).
 		Limit(int(db.pageSize)).
 		Order("name").
 		Find(&recievedActors).

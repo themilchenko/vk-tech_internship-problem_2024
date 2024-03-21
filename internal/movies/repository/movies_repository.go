@@ -27,12 +27,37 @@ func NewPostgres(url string) (*Postgres, error) {
 	}, nil
 }
 
-func (db Postgres) CreateMovie(movie gormModels.Movie) (uint64, error) {
+func (db Postgres) CreateMovieWithoutCastList(movie gormModels.Movie) (uint64, error) {
 	var recievedMovie gormModels.Movie
 	if err := db.DB.Create(&movie).Scan(&recievedMovie).Error; err != nil {
 		return 0, err
 	}
 	return recievedMovie.ID, nil
+}
+
+func (db Postgres) CreateMovieWithCastList(
+	movie gormModels.Movie,
+	castList []uint64,
+) (uint64, error) {
+	tx := db.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	movieID, err := db.CreateMovieWithoutCastList(movie)
+	if err != nil {
+		return 0, err
+	}
+
+	for _, actorID := range castList {
+		if err := db.AddActorToMovie(movieID, actorID); err != nil {
+			return 0, err
+		}
+	}
+
+	return movieID, tx.Commit().Error
 }
 
 func (db Postgres) UpdateMovie(movie gormModels.Movie) (gormModels.Movie, error) {

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.21.3-alpine3.18 AS BUILDER
+FROM golang:1.22.1-alpine3.18 AS BUILDER
 
 RUN go version
 
@@ -8,7 +8,7 @@ COPY . /github.com/movie_lib/
 WORKDIR /github.com/movie_lib/
 
 RUN go mod download
-RUN GOOS=linux go build -o ./bin/server ./cmd/api/main.go
+RUN GOOS=linux go build -o ./bin/server ./cmd/main.go
 
 FROM alpine:latest
 

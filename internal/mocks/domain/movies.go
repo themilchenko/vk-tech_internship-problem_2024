@@ -179,19 +179,34 @@ func (mr *MockMoviesRepositoryMockRecorder) AddActorToMovie(movieID, actorID any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddActorToMovie", reflect.TypeOf((*MockMoviesRepository)(nil).AddActorToMovie), movieID, actorID)
 }
 
-// CreateMovie mocks base method.
-func (m *MockMoviesRepository) CreateMovie(movie gormModels.Movie) (uint64, error) {
+// CreateMovieWithCastList mocks base method.
+func (m *MockMoviesRepository) CreateMovieWithCastList(movie gormModels.Movie, castList []uint64) (uint64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateMovie", movie)
+	ret := m.ctrl.Call(m, "CreateMovieWithCastList", movie, castList)
 	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateMovie indicates an expected call of CreateMovie.
-func (mr *MockMoviesRepositoryMockRecorder) CreateMovie(movie any) *gomock.Call {
+// CreateMovieWithCastList indicates an expected call of CreateMovieWithCastList.
+func (mr *MockMoviesRepositoryMockRecorder) CreateMovieWithCastList(movie, castList any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMovie", reflect.TypeOf((*MockMoviesRepository)(nil).CreateMovie), movie)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMovieWithCastList", reflect.TypeOf((*MockMoviesRepository)(nil).CreateMovieWithCastList), movie, castList)
+}
+
+// CreateMovieWithoutCastList mocks base method.
+func (m *MockMoviesRepository) CreateMovieWithoutCastList(movie gormModels.Movie) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateMovieWithoutCastList", movie)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateMovieWithoutCastList indicates an expected call of CreateMovieWithoutCastList.
+func (mr *MockMoviesRepositoryMockRecorder) CreateMovieWithoutCastList(movie any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMovieWithoutCastList", reflect.TypeOf((*MockMoviesRepository)(nil).CreateMovieWithoutCastList), movie)
 }
 
 // DeleteActorFromMovie mocks base method.

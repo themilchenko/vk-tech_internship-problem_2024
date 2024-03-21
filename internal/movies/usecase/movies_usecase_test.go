@@ -1,10 +1,12 @@
 package moviesUsecase
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/themilchenko/vk-tech_internship-problem_2024/internal/domain"
 	mockDomain "github.com/themilchenko/vk-tech_internship-problem_2024/internal/mocks/domain"
 	gormModels "github.com/themilchenko/vk-tech_internship-problem_2024/internal/models/gorm"
 	httpModels "github.com/themilchenko/vk-tech_internship-problem_2024/internal/models/http"
@@ -12,31 +14,117 @@ import (
 )
 
 func TestUsecase_CreateMovie(t *testing.T) {
-	type mockBehaviorCreateMovie func(r *mockDomain.MockMoviesRepository, movie gormModels.Movie)
+	type mockBehaviorCreateMovie func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie, castIDList []uint64)
+	type mockBehaviorCreateMovieWithoutCastList func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie)
+	type mockBehaviorGetActor func(m *mockDomain.MockActorsRepository, actorID uint64)
 
 	tests := []struct {
-		name                    string
-		inputMovie              httpModels.MovieWithIDCast
-		mockBehaviorCreateMovie mockBehaviorCreateMovie
-		expectedMovieID         uint64
-		expectedError           error
+		name                                   string
+		inputMovie                             httpModels.MovieWithIDCast
+		mockBehaviorCreateMovie                mockBehaviorCreateMovie
+		mockBehaviorCreateMovieWithoutCastList mockBehaviorCreateMovieWithoutCastList
+		mockBehaviorGetActor                   mockBehaviorGetActor
+		expectedMovieID                        uint64
+		expectedError                          error
 	}{
 		{
-			name: "CreateMovie success",
+			name: "CreateMovie success with cast list",
 			inputMovie: httpModels.MovieWithIDCast{
 				Title:       "Title",
 				Description: "Description",
 				ReleaseDate: "2006-01-02",
 				Rating:      5.0,
-				CastIDList:  []uint64{1, 2},
+				CastIDList:  []uint64{1},
 			},
-			mockBehaviorCreateMovie: func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie) {
+			mockBehaviorCreateMovie: func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie, castIDList []uint64) {
 				m.EXPECT().
-					CreateMovie(movie).
+					CreateMovieWithCastList(movie, castIDList).
 					Return(uint64(1), nil)
 			},
-			expectedMovieID: uint64(1),
-			expectedError:   nil,
+			mockBehaviorGetActor: func(m *mockDomain.MockActorsRepository, actorID uint64) {
+				m.EXPECT().GetActorByID(actorID).Return(gormModels.Actor{}, nil)
+			},
+			mockBehaviorCreateMovieWithoutCastList: func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie) {},
+			expectedMovieID:                        uint64(1),
+			expectedError:                          nil,
+		},
+		{
+			name: "CreateMovie success without cast list",
+			inputMovie: httpModels.MovieWithIDCast{
+				Title:       "Title",
+				Description: "Description",
+				ReleaseDate: "2006-01-02",
+				Rating:      5.0,
+				CastIDList:  []uint64{},
+			},
+			mockBehaviorCreateMovie: func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie, castIDList []uint64) {},
+			mockBehaviorCreateMovieWithoutCastList: func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie) {
+				m.EXPECT().CreateMovieWithoutCastList(movie).Return(uint64(1), nil)
+			},
+			mockBehaviorGetActor: func(m *mockDomain.MockActorsRepository, actorID uint64) {},
+			expectedMovieID:      uint64(1),
+			expectedError:        nil,
+		},
+		{
+			name: "CreateMovie error with cast list",
+			inputMovie: httpModels.MovieWithIDCast{
+				Title:       "Title",
+				Description: "Description",
+				ReleaseDate: "2006-01-02",
+				Rating:      5.0,
+				CastIDList:  []uint64{1},
+			},
+			mockBehaviorCreateMovie: func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie, castIDList []uint64) {
+				m.EXPECT().
+					CreateMovieWithCastList(movie, castIDList).
+					Return(uint64(0), errors.New("failed to create item"))
+			},
+			mockBehaviorCreateMovieWithoutCastList: func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie) {},
+			mockBehaviorGetActor: func(m *mockDomain.MockActorsRepository, actorID uint64) {
+				m.EXPECT().GetActorByID(actorID).Return(gormModels.Actor{}, nil)
+			},
+			expectedMovieID: uint64(0),
+			expectedError:   domain.ErrCreate,
+		},
+		{
+			name: "CreateMovie error with cast list",
+			inputMovie: httpModels.MovieWithIDCast{
+				Title:       "Title",
+				Description: "Description",
+				ReleaseDate: "2006-01-02",
+				Rating:      5.0,
+				CastIDList:  []uint64{},
+			},
+			mockBehaviorCreateMovie: func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie, castIDList []uint64) {},
+			mockBehaviorCreateMovieWithoutCastList: func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie) {
+				m.EXPECT().
+					CreateMovieWithoutCastList(movie).
+					Return(uint64(0), errors.New("failed to create item"))
+			},
+			mockBehaviorGetActor: func(m *mockDomain.MockActorsRepository, actorID uint64) {},
+			expectedMovieID:      uint64(0),
+			expectedError:        domain.ErrCreate,
+		},
+		{
+			name: "CreateMovie error parse date",
+			inputMovie: httpModels.MovieWithIDCast{
+				Title:       "Title",
+				Description: "Description",
+				ReleaseDate: "2006=01-02",
+				Rating:      5.0,
+				CastIDList:  []uint64{},
+			},
+			mockBehaviorCreateMovie:                func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie, castIDList []uint64) {},
+			mockBehaviorCreateMovieWithoutCastList: func(m *mockDomain.MockMoviesRepository, movie gormModels.Movie) {},
+			mockBehaviorGetActor:                   func(m *mockDomain.MockActorsRepository, actorID uint64) {},
+			expectedMovieID:                        uint64(0),
+			expectedError: &time.ParseError{
+				Layout:     "2006-01-02",
+				Value:      "2006=01-02",
+				LayoutElem: "-",
+				ValueElem:  "=01-02",
+				Message:    "",
+			},
 		},
 	}
 
@@ -59,7 +147,11 @@ func TestUsecase_CreateMovie(t *testing.T) {
 				Rating:      tt.inputMovie.Rating,
 			}
 
-			tt.mockBehaviorCreateMovie(mockRepo, movie)
+			tt.mockBehaviorCreateMovie(mockRepo, movie, tt.inputMovie.CastIDList)
+			tt.mockBehaviorCreateMovieWithoutCastList(mockRepo, movie)
+			if len(tt.inputMovie.CastIDList) > 0 {
+				tt.mockBehaviorGetActor(mockActorRepo, tt.inputMovie.CastIDList[0])
+			}
 
 			movieID, err := u.CreateMovie(tt.inputMovie)
 			assert.Equal(t, tt.expectedMovieID, movieID)
@@ -258,7 +350,7 @@ func TestUsecase_GetMovies(t *testing.T) {
 							ID:        1,
 							Name:      "Name",
 							BirthDate: time.Date(2006, 1, 2, 0, 0, 0, 0, time.UTC),
-							Gender:   true,
+							Gender:    true,
 						},
 					}, nil)
 			},
@@ -273,7 +365,7 @@ func TestUsecase_GetMovies(t *testing.T) {
 						{
 							ID:        1,
 							Name:      "Name",
-							Gender:   true,
+							Gender:    true,
 							BirthDate: "2006-01-02",
 						},
 					},

@@ -17,7 +17,6 @@ import (
 )
 
 func TestHandler_CreateActor(t *testing.T) {
-
 	type mockBehavior func(r *mockDomain.MockActorsUsecase, actor httpModels.Actor)
 
 	tests := []struct {
@@ -129,6 +128,24 @@ func TestHandler_DeleteActor(t *testing.T) {
 			expectedStatusCode:   http.StatusInternalServerError,
 			expectedResponseBody: `{"error":"empty actor"}`,
 		},
+		{
+			name:    "Status Not Found",
+			actorID: "1",
+			mockBehavior: func(m *mockDomain.MockActorsUsecase, actorID uint64) {
+				m.EXPECT().
+					DeleteActorByID(actorID).
+					Return(domain.ErrNotFound)
+			},
+			expectedStatusCode:   http.StatusNotFound,
+			expectedResponseBody: `{"error":"failed to find item"}`,
+		},
+		{
+			name:                 "Bad request",
+			actorID:              "a",
+			mockBehavior:         func(m *mockDomain.MockActorsUsecase, actorID uint64) {},
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedResponseBody: `{"error":"strconv.ParseUint: parsing \"a\": invalid syntax"}`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -150,7 +167,7 @@ func TestHandler_DeleteActor(t *testing.T) {
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest(
 				http.MethodDelete,
-				"/actors/1",
+				"/actors/"+tt.actorID,
 				nil,
 			)
 
@@ -189,7 +206,14 @@ func TestHandler_GetActor(t *testing.T) {
 			expectedResponseBody: `{"id":1,"name":"John","gender":true,"birthDate":"2000-01-01"}`,
 		},
 		{
-			name:    "Internal server error",
+			name:                 "Bad request",
+			actorID:              "a",
+			mockBehavior:         func(m *mockDomain.MockActorsUsecase, actorID uint64) {},
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedResponseBody: `{"error":"strconv.ParseUint: parsing \"a\": invalid syntax"}`,
+		},
+		{
+			name:    "Error Not Found",
 			actorID: "1",
 			mockBehavior: func(m *mockDomain.MockActorsUsecase, actorID uint64) {
 				m.EXPECT().
@@ -198,6 +222,17 @@ func TestHandler_GetActor(t *testing.T) {
 			},
 			expectedStatusCode:   http.StatusNotFound,
 			expectedResponseBody: `{"error":"failed to find item"}`,
+		},
+		{
+			name:    "Error Not Found",
+			actorID: "1",
+			mockBehavior: func(m *mockDomain.MockActorsUsecase, actorID uint64) {
+				m.EXPECT().
+					GetActorByID(actorID).
+					Return(httpModels.ActorResponse{}, domain.ErrInternal)
+			},
+			expectedStatusCode:   http.StatusInternalServerError,
+			expectedResponseBody: `{"error":"server error"}`,
 		},
 	}
 
@@ -220,7 +255,7 @@ func TestHandler_GetActor(t *testing.T) {
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest(
 				http.MethodGet,
-				"/actors/1",
+				"/actors/"+tt.actorID,
 				nil,
 			)
 
@@ -276,7 +311,7 @@ func TestHandler_UpdateActor(t *testing.T) {
 			expectedResponseBody: `{"error":"invalid character 's' looking for beginning of value"}`,
 		},
 		{
-			name:      "Internal server error",
+			name:      "Error not found",
 			actorID:   "1",
 			inputBody: `{"name":"John","birthDate":"2000-01-01","gender":true}`,
 			inputActor: httpModels.Actor{
@@ -291,6 +326,32 @@ func TestHandler_UpdateActor(t *testing.T) {
 			},
 			expectedStatusCode:   http.StatusNotFound,
 			expectedResponseBody: `{"error":"failed to find item"}`,
+		},
+		{
+			name:                 "Bad Request",
+			actorID:              "a",
+			inputBody:            `{}`,
+			inputActor:           httpModels.Actor{},
+			mockBehavior:         func(m *mockDomain.MockActorsUsecase, actor httpModels.Actor, actorID uint64) {},
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedResponseBody: `{"error":"strconv.ParseUint: parsing \"a\": invalid syntax"}`,
+		},
+		{
+			name:      "Internal Error",
+			actorID:   "1",
+			inputBody: `{"name":"John","birthDate":"2000-01-01","gender":true}`,
+			inputActor: httpModels.Actor{
+				Name:      "John",
+				BirthDate: "2000-01-01",
+				Gender:    true,
+			},
+			mockBehavior: func(m *mockDomain.MockActorsUsecase, actor httpModels.Actor, actorID uint64) {
+				m.EXPECT().
+					UpdateActor(actor, actorID).
+					Return(httpModels.ActorResponse{}, domain.ErrInternal)
+			},
+			expectedStatusCode:   http.StatusInternalServerError,
+			expectedResponseBody: `{"error":"server error"}`,
 		},
 	}
 
@@ -313,7 +374,7 @@ func TestHandler_UpdateActor(t *testing.T) {
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest(
 				http.MethodPut,
-				"/actors/1",
+				"/actors/"+tt.actorID,
 				bytes.NewBufferString(tt.inputBody),
 			)
 
@@ -337,7 +398,7 @@ func TestHandler_GetActors(t *testing.T) {
 	}{
 		{
 			name:    "Successful actors getting",
-			pageNum: "1",
+			pageNum: "",
 			mockBehavior: func(m *mockDomain.MockActorsUsecase, pageNum uint64) {
 				m.EXPECT().
 					GetActors(pageNum).
@@ -355,6 +416,13 @@ func TestHandler_GetActors(t *testing.T) {
 			},
 			expectedStatusCode:   http.StatusOK,
 			expectedResponseBody: `[{"actor":{"id":1,"name":"John","gender":true,"birthDate":"2000-01-01"}}]`,
+		},
+		{
+			name:                 "Error Bad Request",
+			pageNum:              "a",
+			mockBehavior:         func(m *mockDomain.MockActorsUsecase, pageNum uint64) {},
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedResponseBody: `{"error":"strconv.ParseUint: parsing \"a\": invalid syntax"}`,
 		},
 		{
 			name:    "Internal server error",
@@ -376,7 +444,10 @@ func TestHandler_GetActors(t *testing.T) {
 
 			mockActorsUsecase := mockDomain.NewMockActorsUsecase(cntx)
 
-			pageNum, _ := strconv.ParseUint(tt.pageNum, 10, 64)
+			pageNum := uint64(1)
+			if len(tt.pageNum) != 0 {
+				pageNum, _ = strconv.ParseUint(tt.pageNum, 10, 64)
+			}
 
 			tt.mockBehavior(mockActorsUsecase, pageNum)
 
@@ -386,11 +457,20 @@ func TestHandler_GetActors(t *testing.T) {
 			mux.HandleFunc("GET /actors", handler.GetActors)
 
 			w := httptest.NewRecorder()
-			req := httptest.NewRequest(
-				http.MethodGet,
-				"/actors?page=1",
-				nil,
-			)
+			var req *http.Request
+			if tt.pageNum == "" {
+				req = httptest.NewRequest(
+					http.MethodGet,
+					"/actors",
+					nil,
+				)
+			} else {
+				req = httptest.NewRequest(
+					http.MethodGet,
+					"/actors?page="+tt.pageNum,
+					nil,
+				)
+			}
 
 			mux.ServeHTTP(w, req)
 

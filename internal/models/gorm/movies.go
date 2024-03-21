@@ -36,12 +36,7 @@ func (m Movie) ToHTTPMovies() httpModels.MovieWithoutCastList {
 	}
 }
 
-// поучаем фильмы
-// select * from movies
-// where movies.id=1
-// только потом список актеров
-// select actor.id, actor.name, actor.gender, actor.birth_date
-// from actors
-// join actor_movie_relations on actor.id=actor_movie_relations.id
-// where movie_id=?
-// group by actors.id
+func (m *Movie) AfterDelete(tx *gorm.DB) (err error) {
+	tx.Where("movie_id = ?", m.ID).Unscoped().Delete(&ActorMovieRelation{})
+	return
+}
