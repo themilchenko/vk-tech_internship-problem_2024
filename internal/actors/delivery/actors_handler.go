@@ -137,12 +137,13 @@ func (h ActorsHandler) GetActors(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
 	if pageStr == "" {
 		pageNum = defaultPage
-	}
-
-	pageNum, err := strconv.ParseUint(r.URL.Query().Get("page"), 10, 64)
-	if err != nil {
-		pkg.HandleError(w, err.Error(), http.StatusBadRequest)
-		return
+	} else {
+		var err error
+		pageNum, err = strconv.ParseUint(r.URL.Query().Get("page"), 10, 64)
+		if err != nil {
+			pkg.HandleError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	actors, err := h.actorsUsecase.GetActors(pageNum)

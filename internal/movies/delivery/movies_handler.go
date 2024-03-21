@@ -98,7 +98,7 @@ func (h ActorsHandler) GetMovies(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Query().Get("title")
 	actor := r.URL.Query().Get("actor")
 
-	order := r.URL.Query().Get("ordrer")
+	order := r.URL.Query().Get("order")
 	isOrder := true
 	if len(order) != 0 {
 		var err error

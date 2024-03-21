@@ -42,7 +42,7 @@ func TestRepository_CreateMovieWithCastList(t *testing.T) {
 				for _, v := range castList {
 					mock.ExpectQuery("INSERT INTO actor_movie_relations").
 						WithArgs(id, v).
-						WillReturnRows()
+						WillReturnRows(sqlmock.NewRows([]string{}))
 				}
 
 				mock.ExpectCommit()

@@ -1,6 +1,7 @@
 package httpMovies
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -167,14 +168,14 @@ func TestHandler_GetMovie(t *testing.T) {
 
 	tests := []struct {
 		name                 string
-		inputID              uint64
+		inputID              string
 		mockBehavior         mockBehavior
 		expectedStatusCode   int
 		expectedResponseBody string
 	}{
 		{
 			name:    "Successful movie get",
-			inputID: 1,
+			inputID: "1",
 			mockBehavior: func(m *mockDomain.MockMoviesUsecase, id uint64) {
 				m.EXPECT().GetMovieByID(id).Return(httpModels.MovieResponse{
 					ID:          1,
@@ -188,6 +189,31 @@ func TestHandler_GetMovie(t *testing.T) {
 			expectedStatusCode:   http.StatusOK,
 			expectedResponseBody: "{\"id\":1,\"title\":\"The Godfather\",\"description\":\"description\",\"releaseDate\":\"1972-03-24\",\"rating\":9.2}",
 		},
+		{
+			name:                 "Bad Request",
+			inputID:              "a",
+			mockBehavior:         func(m *mockDomain.MockMoviesUsecase, id uint64) {},
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedResponseBody: `{"error":"strconv.ParseUint: parsing \"a\": invalid syntax"}`,
+		},
+		{
+			name:    "Error Not Found",
+			inputID: "1",
+			mockBehavior: func(m *mockDomain.MockMoviesUsecase, id uint64) {
+				m.EXPECT().GetMovieByID(id).Return(httpModels.MovieResponse{}, domain.ErrNotFound)
+			},
+			expectedStatusCode:   http.StatusNotFound,
+			expectedResponseBody: `{"error":"failed to find item"}`,
+		},
+		{
+			name:    "Intenal Error",
+			inputID: "1",
+			mockBehavior: func(m *mockDomain.MockMoviesUsecase, id uint64) {
+				m.EXPECT().GetMovieByID(id).Return(httpModels.MovieResponse{}, domain.ErrInternal)
+			},
+			expectedStatusCode:   http.StatusInternalServerError,
+			expectedResponseBody: `{"error":"server error"}`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -198,13 +224,15 @@ func TestHandler_GetMovie(t *testing.T) {
 			mockMoviesUsecase := mockDomain.NewMockMoviesUsecase(cntx)
 			handler := NewActorsUsecase(mockMoviesUsecase)
 
-			tt.mockBehavior(mockMoviesUsecase, tt.inputID)
+			inputID, _ := strconv.ParseUint(tt.inputID, 10, 64)
+
+			tt.mockBehavior(mockMoviesUsecase, inputID)
 
 			mux := http.NewServeMux()
 			mux.HandleFunc("GET /movies/{id}", handler.GetMovie)
 
 			w := httptest.NewRecorder()
-			req := httptest.NewRequest("GET", "/movies/1", nil)
+			req := httptest.NewRequest("GET", "/movies/"+tt.inputID, nil)
 
 			mux.ServeHTTP(w, req)
 
@@ -219,6 +247,10 @@ func TestHandler_GetMovies(t *testing.T) {
 
 	tests := []struct {
 		name                 string
+		title                string
+		actor                string
+		sortBy               string
+		order                string
 		inputPageNum         uint64
 		mockBehavior         mockBehavior
 		expectedStatusCode   int
@@ -227,6 +259,10 @@ func TestHandler_GetMovies(t *testing.T) {
 		{
 			name:         "Successful movies get",
 			inputPageNum: 1,
+			title:        "godfather",
+			actor:        "",
+			sortBy:       "",
+			order:        "",
 			mockBehavior: func(m *mockDomain.MockMoviesUsecase, title, actor string, filter httpModels.SortBy, isOrder bool) {
 				m.EXPECT().
 					GetMovies(title, actor, filter, isOrder).
@@ -244,6 +280,43 @@ func TestHandler_GetMovies(t *testing.T) {
 			expectedStatusCode:   http.StatusOK,
 			expectedResponseBody: `[{"id":1,"title":"The Godfather","description":"description","releaseDate":"1972-03-24","rating":9.2}]`,
 		},
+		{
+			name:                 "Error Bad Request Order",
+			inputPageNum:         1,
+			title:                "",
+			actor:                "",
+			sortBy:               "",
+			order:                "a",
+			mockBehavior:         func(m *mockDomain.MockMoviesUsecase, title, actor string, filter httpModels.SortBy, isOrder bool) {},
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedResponseBody: `{"error":"strconv.ParseBool: parsing \"a\": invalid syntax"}`,
+		},
+		{
+			name:                 "Error Bad Request Filter",
+			inputPageNum:         1,
+			title:                "",
+			actor:                "",
+			sortBy:               "a",
+			order:                "",
+			mockBehavior:         func(m *mockDomain.MockMoviesUsecase, title, actor string, filter httpModels.SortBy, isOrder bool) {},
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedResponseBody: `{"error":"bad request"}`,
+		},
+		{
+			name:         "Internal Error",
+			inputPageNum: 1,
+			title:        "",
+			actor:        "",
+			sortBy:       "",
+			order:        "",
+			mockBehavior: func(m *mockDomain.MockMoviesUsecase, title, actor string, filter httpModels.SortBy, isOrder bool) {
+				m.EXPECT().
+					GetMovies(title, actor, filter, isOrder).
+					Return([]httpModels.MovieResponse{}, domain.ErrInternal)
+			},
+			expectedStatusCode:   http.StatusInternalServerError,
+			expectedResponseBody: `{"error":"server error"}`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -254,13 +327,35 @@ func TestHandler_GetMovies(t *testing.T) {
 			mockMoviesUsecase := mockDomain.NewMockMoviesUsecase(cntx)
 			handler := NewActorsUsecase(mockMoviesUsecase)
 
-			tt.mockBehavior(mockMoviesUsecase, "", "", httpModels.SortBy("rating"), true)
+			order := true
+			if len(tt.order) != 0 {
+				order, _ = strconv.ParseBool(tt.order)
+			}
+			sortBy := "rating"
+			if len(tt.sortBy) != 0 {
+				sortBy = tt.sortBy
+			}
+
+			tt.mockBehavior(
+				mockMoviesUsecase,
+				tt.title,
+				tt.actor,
+				httpModels.SortBy(sortBy),
+				order,
+			)
 
 			mux := http.NewServeMux()
 			mux.HandleFunc("GET /movies", handler.GetMovies)
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest("GET", "/movies", nil)
+
+			v := req.URL.Query()
+			v.Add("title", fmt.Sprint(tt.title))
+			v.Add("actor", fmt.Sprint(tt.actor))
+			v.Add("order", fmt.Sprint(tt.order))
+			v.Add("filter", fmt.Sprint(tt.sortBy))
+			req.URL.RawQuery = v.Encode()
 
 			mux.ServeHTTP(w, req)
 
