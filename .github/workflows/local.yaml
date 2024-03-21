@@ -50,7 +50,8 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          source: "./docker-compose.yaml, configs/"
+          port: ${{ secrets.SSH_PORT }}
+          source: "./docker-compose.yml, configs/"
           target: "backend"
           rm: true
       - name: executing remote ssh commands using ssh key
