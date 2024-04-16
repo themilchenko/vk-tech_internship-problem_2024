@@ -19,6 +19,10 @@ import (
 	logger "github.com/themilchenko/vk-tech_internship-problem_2024/pkg"
 )
 
+const (
+	baseURLPath = "/api/v1"
+)
+
 type Server struct {
 	Server *http.Server
 	Config *config.Config
@@ -61,34 +65,37 @@ func (s *Server) makeRouter() {
 	http.Handle("/", logger.Middleware(s.Router))
 
 	// authorization
-	s.Router.HandleFunc("GET /api/auth", s.authHandler.Auth)
-	s.Router.HandleFunc("POST /api/signup", s.authHandler.Signup)
-	s.Router.HandleFunc("POST /api/login", s.authHandler.Login)
-	s.Router.HandleFunc("DELETE /api/logout", s.authMiddleware.LoginRequired(s.authHandler.Logout))
+	s.Router.HandleFunc("GET "+baseURLPath+"/auth", s.authHandler.Auth)
+	s.Router.HandleFunc("POST "+baseURLPath+"/signup", s.authHandler.Signup)
+	s.Router.HandleFunc("POST "+baseURLPath+"/login", s.authHandler.Login)
+	s.Router.HandleFunc(
+		"DELETE "+baseURLPath+"/logout",
+		s.authMiddleware.LoginRequired(s.authHandler.Logout),
+	)
 
 	// actors
 	s.Router.HandleFunc(
-		"POST /api/actors",
+		"POST "+baseURLPath+"/actors",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.actorsHandler.CreateActor),
 		),
 	)
 	s.Router.HandleFunc(
-		"GET /api/actors",
+		"GET "+baseURLPath+"/actors",
 		s.authMiddleware.LoginRequired(s.actorsHandler.GetActors),
 	)
 	s.Router.HandleFunc(
-		"PUT /api/actors/{id}",
+		"PUT "+baseURLPath+"/actors/{id}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.actorsHandler.UpdateActor),
 		),
 	)
 	s.Router.HandleFunc(
-		"GET /api/actors/{id}",
+		"GET "+baseURLPath+"/actors/{id}",
 		s.authMiddleware.LoginRequired(s.actorsHandler.GetActor),
 	)
 	s.Router.HandleFunc(
-		"DELETE /api/actors/{id}",
+		"DELETE "+baseURLPath+"/actors/{id}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.actorsHandler.DeleteActor),
 		),
@@ -96,39 +103,39 @@ func (s *Server) makeRouter() {
 
 	// movies
 	s.Router.HandleFunc(
-		"POST /api/movies",
+		"POST "+baseURLPath+"/movies",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.moviesHandler.CreateMovie),
 		),
 	)
 	s.Router.HandleFunc(
-		"GET /api/movies",
+		"GET "+baseURLPath+"/movies",
 		s.authMiddleware.LoginRequired(s.moviesHandler.GetMovies),
 	)
 	s.Router.HandleFunc(
-		"PUT /api/movies/{id}",
+		"PUT "+baseURLPath+"/movies/{id}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.moviesHandler.UpdateMovie),
 		),
 	)
 	s.Router.HandleFunc(
-		"DELETE /api/movies/{id}",
+		"DELETE "+baseURLPath+"/movies/{id}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.moviesHandler.DeleteMovie),
 		),
 	)
 	s.Router.HandleFunc(
-		"GET /api/movies/{id}",
+		"GET "+baseURLPath+"/movies/{id}",
 		s.authMiddleware.LoginRequired(s.moviesHandler.GetMovie),
 	)
 	s.Router.HandleFunc(
-		"POST /api/movies/{movieID}/actors/{actorID}",
+		"POST "+baseURLPath+"/movies/{movieID}/actors/{actorID}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.moviesHandler.AddActorToMovie),
 		),
 	)
 	s.Router.HandleFunc(
-		"DELETE /api/movies/{movieID}/actors/{actorID}",
+		"DELETE "+baseURLPath+"/movies/{movieID}/actors/{actorID}",
 		s.authMiddleware.LoginRequired(
 			s.authMiddleware.AccessRestriction(s.moviesHandler.DeleteActorFromMoive),
 		),
