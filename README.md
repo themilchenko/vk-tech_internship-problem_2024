@@ -6,7 +6,7 @@
 
 :notebook_with_decorative_cover: Докумментация доступна по ссылке: https://milchenko.online
 
-:rocket: Деплой API доступен по пути: https://milchenko.online/api
+:rocket: Деплой API доступен по пути: https://milchenko.online/api/v1
 
 ---
 
