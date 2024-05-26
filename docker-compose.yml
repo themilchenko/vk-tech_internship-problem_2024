@@ -5,7 +5,7 @@ services:
     container_name: movies-api
     image: milchenko/movies-api
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       postgres:
         condition: service_healthy

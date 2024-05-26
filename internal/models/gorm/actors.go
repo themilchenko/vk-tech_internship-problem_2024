@@ -24,16 +24,13 @@ func (a Actor) ToHTTPModel() httpModels.ActorResponse {
 	}
 }
 
-func (a Actor) ToHTTPModelActor() httpModels.Actor {
-	return httpModels.Actor{
-		Name:      a.Name,
-		Gender:    a.Gender,
-		BirthDate: a.BirthDate.Format(time.DateOnly),
-	}
-}
-
 type ActorMovieRelation struct {
 	gorm.Model
 	MovieID uint64 `gorm:"uniqueIndex:idx_movie_actor"`
 	ActorID uint64 `gorm:"uniqueIndex:idx_movie_actor"`
+}
+
+func (a *Actor) AfterDelete(tx *gorm.DB) (err error) {
+	tx.Where("actor_id = ?", a.ID).Unscoped().Delete(&ActorMovieRelation{})
+	return
 }

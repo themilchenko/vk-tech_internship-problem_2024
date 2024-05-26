@@ -1,4 +1,4 @@
-name: CI
+name: actions
 on: [push]
 
 jobs:
@@ -11,7 +11,7 @@ jobs:
           go-version: 1.21.3
       - uses: actions/checkout@v4
       - name: Build the project
-        run: make build_local
+        run: make local_build
 
   docker-push-api:
     name: Build and push api
@@ -33,14 +33,13 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./containers/api/Dockerfile
+          file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/movies-api:latest
 
   build_and_push:
     needs:
       - docker-push-api
-      - docker-push-notifications
     runs-on: ubuntu-latest
 
     steps:
@@ -50,8 +49,10 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE}}
           key: ${{ secrets.SSH_KEY }}
-          source: "containers/docker-compose.yaml, configs/"
+          port: ${{ secrets.SSH_PORT }}
+          source: "./docker-compose.yml, configs/"
           target: "backend"
           rm: true
       - name: executing remote ssh commands using ssh key
@@ -59,12 +60,13 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE}}
+          port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
           script: |
             docker exec -i postgresql /bin/bash -c "pg_dump --username postgres movies_library" > ~/backup/dump.sql
-            docker rm -f $(docker ps -aq)
+            docker rm -f movies_api postgresql
 
-            cd ~/backend/containers
-            mv ../migrations .
+            cd ~/backend
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/movies-api
             docker compose up -d

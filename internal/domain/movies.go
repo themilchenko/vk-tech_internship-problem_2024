@@ -23,7 +23,8 @@ type MoviesUsecase interface {
 }
 
 type MoviesRepository interface {
-	CreateMovie(movie gormModels.Movie) (uint64, error)
+	CreateMovieWithoutCastList(movie gormModels.Movie) (uint64, error)
+	CreateMovieWithCastList(movie gormModels.Movie, castList []uint64) (uint64, error)
 	UpdateMovie(movie gormModels.Movie) (gormModels.Movie, error)
 	GetMovieByID(movieID uint64) (gormModels.Movie, error)
 	DeleteMovieByID(movieID uint64) error
